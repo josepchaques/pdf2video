@@ -127,6 +127,7 @@ async def crear_job(
             "dir": d, "job": job, "created": time.time(),
             "estado": {"fase": "listo", "progreso": 0, "mensaje": "", "ficheros": []},
             "nombre": Path(pdf.filename).stem,
+            "cancelado": False,
         }
 
     return {
@@ -217,7 +218,8 @@ def generar(job_id: str, op: Opciones):
                 video=f"/api/jobs/{job_id}/fichero/{salida.name}", ficheros=ficheros,
             )
         except Exception as e:
-            estado.update(fase="error", progreso=0, mensaje=str(e)[:500])
+            if not entrada.get("cancelado"):
+                estado.update(fase="error", progreso=0, mensaje=str(e)[:500])
 
     threading.Thread(target=trabajo, daemon=True).start()
     return {"ok": True}
@@ -240,6 +242,7 @@ def fichero(job_id: str, nombre: str):
 @app.delete("/api/jobs/{job_id}")
 def borrar(job_id: str):
     entrada = _get(job_id)
+    entrada["cancelado"] = True
     shutil.rmtree(entrada["dir"], ignore_errors=True)
     with LOCK:
         JOBS.pop(job_id, None)

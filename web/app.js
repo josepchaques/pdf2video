@@ -260,15 +260,22 @@ function fallo(msg) {
   totales();
 }
 
-// ------------------------------------------------------------- reiniciar
-$("#reiniciar").addEventListener("click", async () => {
+// ------------------------------------------------------------- reiniciar / cancelar
+async function reiniciar() {
   clearInterval(sondeo);
   if (jobId) { try { await api(`/api/jobs/${jobId}`, { method: "DELETE" }); } catch {} }
   jobId = null; paginas = [];
   $("#video").removeAttribute("src");
   $("#resultado").hidden = true;
   $("#progreso").hidden = true;
+  $("#generar").disabled = false;
+  $("#generar").textContent = "Generar vídeo";
+  $("#barra").hidden = true;
+  $("#rail-etiqueta").textContent = "Duración estimada";
   $("#banco").hidden = true;
   $("#inicio").hidden = false;
   $("#pdf").value = "";
-});
+}
+
+$("#reiniciar").addEventListener("click", reiniciar);
+$("#cancelar").addEventListener("click", reiniciar);
