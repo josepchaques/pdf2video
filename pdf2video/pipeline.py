@@ -415,9 +415,10 @@ def write_srt(job: Job, output: str | Path, max_chars: int = 90) -> Path:
 def burn_subtitles(video: Path, srt: Path, output: Path) -> Path:
     style = ("FontName=Arial,FontSize=22,PrimaryColour=&H00FFFFFF,"
              "OutlineColour=&H90000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=40")
+    style_esc = style.replace(",", "\\,")
     run_ffmpeg([
         "-i", str(video),
-        "-vf", f"subtitles={srt.as_posix()}:force_style={style}",
+        "-vf", f"subtitles={srt.as_posix()}:force_style={style_esc}",
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
         "-c:a", "copy", str(output),
     ])
