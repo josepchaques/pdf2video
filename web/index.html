@@ -99,6 +99,20 @@
 
     <p class="aviso" id="aviso" hidden></p>
 
+    <div id="progreso" class="progreso" hidden>
+      <div class="progreso__cabeza">
+        <div class="spinner" id="prog-spinner"></div>
+        <div class="progreso__textos">
+          <p class="progreso__fase" id="prog-fase"></p>
+          <p class="progreso__detalle" id="prog-detalle"></p>
+        </div>
+        <span class="progreso__pct" id="prog-pct"></span>
+      </div>
+      <div class="progreso__track">
+        <div class="progreso__fill" id="prog-fill"></div>
+      </div>
+    </div>
+
     <div class="resultado" id="resultado" hidden>
       <video id="video" controls playsinline></video>
       <div class="resultado__lado">

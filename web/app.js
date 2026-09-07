@@ -153,6 +153,25 @@ function totales() {
   $("#rail-sub").textContent = `${paginas.length} páginas · estimación`;
 }
 
+function _faseMensaje(msg) {
+  if (!msg || msg.includes("Preparando")) return ["Preparando", ""];
+  if (msg.includes("Sintetizando")) return ["Generando audio", msg];
+  if (msg.includes("Renderizando")) return ["Codificando vídeo", msg];
+  if (msg.includes("Uniendo")) return ["Ensamblando vídeo", ""];
+  return ["Procesando", msg];
+}
+
+function actualizarProgreso(pct, msg) {
+  const prog = $("#progreso");
+  prog.hidden = false;
+  prog.classList.remove("progreso--error");
+  const [fase, detalle] = _faseMensaje(msg);
+  $("#prog-fase").textContent = fase;
+  $("#prog-detalle").textContent = detalle;
+  $("#prog-fill").style.width = `${pct}%`;
+  $("#prog-pct").textContent = `${pct}%`;
+}
+
 // ------------------------------------------------------------- generar
 $("#generar").addEventListener("click", async () => {
   aviso("");
@@ -164,6 +183,7 @@ $("#generar").addEventListener("click", async () => {
   $("#generar").textContent = "Generando…";
   $("#barra").hidden = false;
   $("#rail-etiqueta").textContent = "Generando vídeo";
+  actualizarProgreso(1, "Preparando…");
 
   try {
     await api(`/api/jobs/${jobId}/generar`, {
@@ -194,8 +214,10 @@ async function consultar() {
 
   $("#barra-relleno").style.width = `${e.progreso}%`;
   $("#rail-sub").textContent = e.mensaje || "";
+  actualizarProgreso(e.progreso, e.mensaje || "");
 
   if (e.fase === "hecho") {
+    $("#progreso").hidden = true;
     clearInterval(sondeo);
     const q = T ? `?t=${T}` : "";
     $("#video").src = e.video + q;
@@ -217,7 +239,14 @@ async function consultar() {
 
 function fallo(msg) {
   clearInterval(sondeo);
-  aviso(`No se pudo generar el vídeo: ${msg}`);
+  const prog = $("#progreso");
+  prog.hidden = false;
+  prog.classList.add("progreso--error");
+  $("#prog-fase").textContent = "Error al generar el vídeo";
+  $("#prog-detalle").textContent = msg;
+  $("#prog-fill").style.width = "0%";
+  $("#prog-pct").textContent = "";
+  aviso("");
   $("#generar").disabled = false;
   $("#generar").textContent = "Generar vídeo";
   $("#barra").hidden = true;
@@ -232,6 +261,7 @@ $("#reiniciar").addEventListener("click", async () => {
   jobId = null; paginas = [];
   $("#video").removeAttribute("src");
   $("#resultado").hidden = true;
+  $("#progreso").hidden = true;
   $("#banco").hidden = true;
   $("#inicio").hidden = false;
   $("#pdf").value = "";

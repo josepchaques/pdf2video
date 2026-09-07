@@ -18,6 +18,9 @@ import subprocess
 import urllib.request
 from dataclasses import dataclass, field
 from pathlib import Path
+import os
+import threading
+from concurrent.futures import ThreadPoolExecutor
 
 import pymupdf
 
@@ -317,12 +320,12 @@ def build_video(
           f"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color={bg},"
           f"format=yuv420p")
 
-    clock = 0.0
-    for p in job.pages:
+    done = [0]
+    lock = threading.Lock()
+
+    def _encode(p: Page) -> tuple:
         seg = seg_dir / f"seg_{p.number:03d}.mp4"
         dur = max(p.duration + tail, 1.5)
-        if progress:
-            progress(f"Renderizando segmento {p.number}/{job.n} ({dur:.1f}s)…")
         run_ffmpeg([
             "-loop", "1", "-framerate", str(fps), "-i", str(p.image),
             "-i", str(p.audio),
@@ -330,11 +333,23 @@ def build_video(
             "-t", f"{dur:.2f}",
             "-vf", vf,
             "-r", str(fps),
-            "-c:v", "libx264", "-preset", "veryfast", "-crf", str(crf),
+            "-c:v", "libx264", "-preset", "ultrafast", "-crf", str(crf),
             "-tune", "stillimage",
-            "-c:a", "aac", "-b:a", "160k", "-ar", "48000", "-ac", "2",
+            "-c:a", "aac", "-b:a", "96k", "-ar", "48000", "-ac", "1",
             str(seg),
         ])
+        with lock:
+            done[0] += 1
+            if progress:
+                progress(f"Renderizando segmento {done[0]}/{job.n}…")
+        return p, seg, dur
+
+    workers = min(os.cpu_count() or 1, 4)
+    with ThreadPoolExecutor(max_workers=workers) as pool:
+        encoded = list(pool.map(_encode, job.pages))
+
+    clock = 0.0
+    for p, seg, dur in encoded:
         p.segment = seg
         p.start = clock
         clock += dur

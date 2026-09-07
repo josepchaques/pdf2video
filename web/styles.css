@@ -147,6 +147,34 @@ h1{
 .descargas a{color:var(--tinta);text-decoration:none;border-bottom:1px solid var(--laton);font-size:14px}
 .descargas a:hover{border-bottom-width:2px}
 
+/* ------------------------------------------------------------- progreso */
+@keyframes girar{to{transform:rotate(360deg)}}
+.spinner{
+  flex-shrink:0;width:22px;height:22px;
+  border:2.5px solid var(--linea);border-top-color:var(--pizarra);
+  border-radius:50%;animation:girar .7s linear infinite;
+}
+.progreso{
+  padding:16px 18px;background:var(--tiza);border:1px solid var(--linea);
+  margin-bottom:22px;display:grid;gap:10px;
+}
+.progreso__cabeza{display:flex;align-items:center;gap:12px}
+.progreso__textos{flex:1;min-width:0}
+.progreso__fase{margin:0;font-weight:600;font-size:14px}
+.progreso__detalle{
+  margin:3px 0 0;font-size:13px;color:var(--tinta-suave);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.progreso__pct{
+  font-family:var(--mono);font-size:13px;color:var(--tinta-suave);
+  font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+.progreso__track{height:3px;background:var(--linea)}
+.progreso__fill{height:100%;width:0;background:var(--pizarra);transition:width .4s}
+.progreso--error .spinner{border-color:var(--alarma);border-top-color:var(--alarma);animation:none}
+.progreso--error .progreso__fase{color:var(--alarma)}
+.progreso--error .progreso__fill{background:var(--alarma);width:100%!important}
+
 /* ------------------------------------------------------------- móvil */
 @media (max-width:860px){
   .banco{grid-template-columns:1fr}
