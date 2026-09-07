@@ -174,6 +174,7 @@ $("#generar").addEventListener("click", async () => {
         subtitulos: $("#subs").value,
       }),
     });
+    clearInterval(sondeo);
     sondeo = setInterval(consultar, 1500);
   } catch (e) {
     fallo(e.message);
@@ -214,6 +215,7 @@ async function consultar() {
 }
 
 function fallo(msg) {
+  clearInterval(sondeo);
   aviso(`No se pudo generar el vídeo: ${msg}`);
   $("#generar").disabled = false;
   $("#generar").textContent = "Generar vídeo";
