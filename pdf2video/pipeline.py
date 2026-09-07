@@ -203,6 +203,24 @@ def _edge_tts(text: str, out: Path, voice: str, rate: str, pitch: str) -> None:
     asyncio.run(_run())
 
 
+async def _edge_tts_batch(
+    job: Job, audio_dir: Path, voice: str, rate: str, pitch: str, blank_page_seconds: float
+) -> None:
+    import edge_tts
+
+    async def _one(p: Page) -> None:
+        out = audio_dir / f"page_{p.number:03d}.mp3"
+        if not p.script.strip():
+            loop = asyncio.get_running_loop()
+            await loop.run_in_executor(None, _silence, out, blank_page_seconds)
+        else:
+            comm = edge_tts.Communicate(p.script, voice=voice, rate=rate, pitch=pitch)
+            await comm.save(str(out))
+        p.audio = out
+
+    await asyncio.gather(*[_one(p) for p in job.pages])
+
+
 def _piper_tts(text: str, out: Path, model_path: str, length_scale: float = 1.0) -> None:
     cmd = [
         "piper", "--model", model_path,
@@ -234,26 +252,28 @@ def synthesize(
     audio_dir = job.workdir / "audio"
     audio_dir.mkdir(parents=True, exist_ok=True)
 
-    for p in job.pages:
-        ext = "mp3" if engine == "edge" else "wav"
-        out = audio_dir / f"page_{p.number:03d}.{ext}"
+    if engine == "edge":
         if progress:
-            progress(f"Sintetizando voz {p.number}/{job.n}…")
+            progress(f"Sintetizando voz ({job.n} páginas en paralelo)…")
+        asyncio.run(_edge_tts_batch(job, audio_dir, voice, rate, pitch, blank_page_seconds))
+    else:
+        for p in job.pages:
+            out = audio_dir / f"page_{p.number:03d}.wav"
+            if progress:
+                progress(f"Sintetizando voz {p.number}/{job.n}…")
+            if not p.script.strip():
+                out = audio_dir / f"page_{p.number:03d}.mp3"
+                _silence(out, blank_page_seconds)
+            elif engine == "piper":
+                if not piper_model:
+                    raise ValueError("Falta la ruta del modelo .onnx de Piper.")
+                _piper_tts(p.script, out, piper_model, piper_length_scale)
+            else:
+                raise ValueError(f"Motor TTS desconocido: {engine}")
+            p.audio = out
 
-        if not p.script.strip():
-            out = audio_dir / f"page_{p.number:03d}.mp3"
-            _silence(out, blank_page_seconds)
-        elif engine == "edge":
-            _edge_tts(p.script, out, voice, rate, pitch)
-        elif engine == "piper":
-            if not piper_model:
-                raise ValueError("Falta la ruta del modelo .onnx de Piper.")
-            _piper_tts(p.script, out, piper_model, piper_length_scale)
-        else:
-            raise ValueError(f"Motor TTS desconocido: {engine}")
-
-        p.audio = out
-        p.duration = probe_duration(out)
+    for p in job.pages:
+        p.duration = probe_duration(p.audio)
     return job
 
 
