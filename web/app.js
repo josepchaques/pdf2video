@@ -156,6 +156,7 @@ function totales() {
 // ------------------------------------------------------------- generar
 $("#generar").addEventListener("click", async () => {
   aviso("");
+  $("#resultado").hidden = true;
   const [ancho, alto] = $("#res").value.split("x").map(Number);
   const guion = paginas.map((p) => `=== PÁGINA ${p.n} ===\n${p.texto}`).join("\n\n");
 
