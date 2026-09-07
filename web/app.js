@@ -217,9 +217,10 @@ async function consultar() {
   } catch (err) {
     if (/50[234]/.test(err.message)) {
       errores5xx++;
-      if (errores5xx < 6) return;  // aguanta hasta ~9s mientras el servidor arranca
+      actualizarProgreso(0, `Servidor arrancando… (${errores5xx})`);
+      if (errores5xx < 40) return;  // aguanta hasta ~60s de cold start
       clearInterval(sondeo);
-      fallo("El servidor está reiniciando. Espera un momento y vuelve a subir el PDF.");
+      fallo("El servidor tardó demasiado en responder. Vuelve a intentarlo.");
       return;
     }
     clearInterval(sondeo);
