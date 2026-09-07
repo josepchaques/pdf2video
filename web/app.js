@@ -155,8 +155,14 @@ function totales() {
 
 function _faseMensaje(msg) {
   if (!msg || msg.includes("Preparando")) return ["Preparando", ""];
-  if (msg.includes("Sintetizando")) return ["Generando audio", msg];
-  if (msg.includes("Renderizando")) return ["Codificando vídeo", msg];
+  if (msg.includes("Sintetizando")) {
+    const m = msg.match(/(\d+)\/(\d+)/);
+    return ["Generando audio", m ? `Página ${m[1]} de ${m[2]}` : ""];
+  }
+  if (msg.includes("Renderizando")) {
+    const m = msg.match(/(\d+)\/(\d+)/);
+    return ["Codificando vídeo", m ? `Segmento ${m[1]} de ${m[2]}` : ""];
+  }
   if (msg.includes("Uniendo")) return ["Ensamblando vídeo", ""];
   return ["Procesando", msg];
 }

@@ -207,19 +207,27 @@ def _edge_tts(text: str, out: Path, voice: str, rate: str, pitch: str) -> None:
 
 
 async def _edge_tts_batch(
-    job: Job, audio_dir: Path, voice: str, rate: str, pitch: str, blank_page_seconds: float
+    job: Job, audio_dir: Path, voice: str, rate: str, pitch: str,
+    blank_page_seconds: float, progress=None,
 ) -> None:
     import edge_tts
 
+    done = [0]
+    sem = asyncio.Semaphore(8)
+
     async def _one(p: Page) -> None:
-        out = audio_dir / f"page_{p.number:03d}.mp3"
-        if not p.script.strip():
-            loop = asyncio.get_running_loop()
-            await loop.run_in_executor(None, _silence, out, blank_page_seconds)
-        else:
-            comm = edge_tts.Communicate(p.script, voice=voice, rate=rate, pitch=pitch)
-            await comm.save(str(out))
-        p.audio = out
+        async with sem:
+            out = audio_dir / f"page_{p.number:03d}.mp3"
+            if not p.script.strip():
+                loop = asyncio.get_running_loop()
+                await loop.run_in_executor(None, _silence, out, blank_page_seconds)
+            else:
+                comm = edge_tts.Communicate(p.script, voice=voice, rate=rate, pitch=pitch)
+                await comm.save(str(out))
+            p.audio = out
+            done[0] += 1
+            if progress:
+                progress(f"Sintetizando voz {done[0]}/{job.n}…")
 
     await asyncio.gather(*[_one(p) for p in job.pages])
 
@@ -257,8 +265,8 @@ def synthesize(
 
     if engine == "edge":
         if progress:
-            progress(f"Sintetizando voz ({job.n} páginas en paralelo)…")
-        asyncio.run(_edge_tts_batch(job, audio_dir, voice, rate, pitch, blank_page_seconds))
+            progress(f"Sintetizando voz 0/{job.n}…")
+        asyncio.run(_edge_tts_batch(job, audio_dir, voice, rate, pitch, blank_page_seconds, progress))
     else:
         for p in job.pages:
             out = audio_dir / f"page_{p.number:03d}.wav"
