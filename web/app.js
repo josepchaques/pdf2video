@@ -66,10 +66,10 @@ $("#pdf").addEventListener("change", (e) => e.target.files[0] && subir(e.target.
 
 async function subir(archivo) {
   aviso("", "#aviso-inicio");
+  const mb = (archivo.size / 1024 / 1024).toFixed(1);
+  $(".zona__titulo").textContent = archivo.name;
+  $(".zona__pista").textContent = `${mb} MB · procesando…`;
   zona.classList.add("cargando");
-  $(".zona__titulo").textContent = "Leyendo el PDF…";
-  $(".zona__pista").textContent = $("#usar-llm")?.checked
-    ? "Redactando la narración, esto tarda un rato" : "Un momento";
 
   const fd = new FormData();
   fd.append("pdf", archivo);

@@ -47,7 +47,7 @@ h1{
 .zona.activa{border-style:solid}
 .zona__titulo{font-size:19px;font-weight:600}
 .zona__pista{color:var(--tinta-suave);font-size:14px}
-.zona.cargando{pointer-events:none;opacity:.55}
+.zona.cargando{pointer-events:none;border-color:var(--pizarra);border-style:solid;background:#fff}
 
 .avanzado{margin-top:20px;border-top:1px solid var(--linea);padding-top:12px}
 .avanzado summary{cursor:pointer;color:var(--tinta-suave);font-size:14px}
