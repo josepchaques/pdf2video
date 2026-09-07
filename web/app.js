@@ -6,6 +6,7 @@ let jobId = null;
 let paginas = [];
 let sondeo = null;
 let motor = "edge";
+let errores5xx = 0;
 const PISTA = document.querySelector(".zona__pista").innerHTML;
 
 const api = async (url, opciones = {}) => {
@@ -210,7 +211,17 @@ $("#generar").addEventListener("click", async () => {
 
 async function consultar() {
   let e;
-  try { e = await api(`/api/jobs/${jobId}/estado`); } catch (err) {
+  try {
+    e = await api(`/api/jobs/${jobId}/estado`);
+    errores5xx = 0;
+  } catch (err) {
+    if (/50[234]/.test(err.message)) {
+      errores5xx++;
+      if (errores5xx < 6) return;  // aguanta hasta ~9s mientras el servidor arranca
+      clearInterval(sondeo);
+      fallo("El servidor está reiniciando. Espera un momento y vuelve a subir el PDF.");
+      return;
+    }
     clearInterval(sondeo);
     fallo(err.message.includes("404") || err.message.includes("ya no existe")
       ? "El servidor se reinició y perdió el trabajo. Vuelve a subir el PDF."
@@ -263,6 +274,7 @@ function fallo(msg) {
 // ------------------------------------------------------------- reiniciar / cancelar
 async function reiniciar() {
   clearInterval(sondeo);
+  errores5xx = 0;
   if (jobId) { try { await api(`/api/jobs/${jobId}`, { method: "DELETE" }); } catch {} }
   jobId = null; paginas = [];
   $("#video").removeAttribute("src");
