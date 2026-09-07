@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PDF → vídeo narrado</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="data:,">
+</head>
+<body>
+
+<!-- ============ PANTALLA 1: subir ============ -->
+<section id="inicio" class="inicio">
+  <div class="inicio__caja">
+    <h1>Hola, Carlos!<br>convierte el temario en una clase grabada</h1>
+    <p class="inicio__texto">
+      Sube el PDF, repasa lo que va a decir la voz en cada página y descarga el MP4.
+      Nada se graba con micrófono y el PDF se borra del servidor al cabo de unas horas.
+    </p>
+
+    <label id="zona" class="zona" for="pdf">
+      <input type="file" id="pdf" accept="application/pdf" hidden>
+      <span class="zona__titulo">Suelta aquí el PDF</span>
+      <span class="zona__pista">o pulsa para elegirlo — hasta <span id="lim-mb">50</span> MB</span>
+    </label>
+
+    <details class="avanzado">
+      <summary>Opciones de lectura del PDF</summary>
+      <div class="avanzado__cuerpo">
+        <label class="campo">
+          <span>Calidad de imagen</span>
+          <select id="dpi">
+            <option value="110">Ligera (110 ppp)</option>
+            <option value="150" selected>Normal (150 ppp)</option>
+            <option value="220">Alta (220 ppp)</option>
+          </select>
+        </label>
+        <label class="campo campo--check" id="campo-llm" hidden>
+          <input type="checkbox" id="usar-llm">
+          <span>Redactar la narración con Ollama antes de mostrarla</span>
+        </label>
+        <p class="nota" id="nota-llm">
+          Ollama no está disponible en este servidor: verás el texto tal cual sale del PDF.
+        </p>
+      </div>
+    </details>
+
+    <p class="aviso" id="aviso-inicio" hidden></p>
+  </div>
+</section>
+
+<!-- ============ PANTALLA 2: banco de trabajo ============ -->
+<main id="banco" class="banco" hidden>
+
+  <aside class="rail">
+    <div class="rail__cabecera">
+      <p class="rail__etiqueta" id="rail-etiqueta">Duración estimada</p>
+      <p class="reloj" id="reloj">00:00</p>
+      <p class="rail__sub" id="rail-sub">0 páginas</p>
+      <div class="barra" id="barra" hidden><i id="barra-relleno"></i></div>
+    </div>
+    <ol class="tira" id="tira"></ol>
+  </aside>
+
+  <section class="taller">
+    <header class="ajustes">
+      <label class="campo">
+        <span>Voz</span>
+        <select id="voz"></select>
+      </label>
+      <label class="campo">
+        <span>Velocidad</span>
+        <select id="velocidad">
+          <option value="-15">Pausada</option>
+          <option value="0" selected>Normal</option>
+          <option value="10">Ágil</option>
+          <option value="20">Rápida</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span>Resolución</span>
+        <select id="res">
+          <option value="1920x1080" selected>1920 × 1080</option>
+          <option value="1280x720">1280 × 720</option>
+          <option value="2560x1440">2560 × 1440</option>
+        </select>
+      </label>
+      <label class="campo">
+        <span>Subtítulos</span>
+        <select id="subs">
+          <option value="srt" selected>Fichero .srt aparte</option>
+          <option value="incrustados">Incrustados en la imagen</option>
+          <option value="no">Sin subtítulos</option>
+        </select>
+      </label>
+      <button id="generar" class="boton">Generar vídeo</button>
+      <button id="reiniciar" class="boton boton--plano">Otro PDF</button>
+    </header>
+
+    <p class="aviso" id="aviso" hidden></p>
+
+    <div class="resultado" id="resultado" hidden>
+      <video id="video" controls playsinline></video>
+      <div class="resultado__lado">
+        <p class="resultado__titulo">Vídeo listo</p>
+        <p class="resultado__dato" id="resultado-dato"></p>
+        <ul class="descargas" id="descargas"></ul>
+      </div>
+    </div>
+
+    <div id="paginas" class="paginas"></div>
+  </section>
+</main>
+
+<script src="app.js"></script>
+</body>
+</html>
