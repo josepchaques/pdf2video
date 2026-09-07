@@ -182,7 +182,13 @@ $("#generar").addEventListener("click", async () => {
 
 async function consultar() {
   let e;
-  try { e = await api(`/api/jobs/${jobId}/estado`); } catch { return; }
+  try { e = await api(`/api/jobs/${jobId}/estado`); } catch (err) {
+    clearInterval(sondeo);
+    fallo(err.message.includes("404") || err.message.includes("ya no existe")
+      ? "El servidor se reinició y perdió el trabajo. Vuelve a subir el PDF."
+      : err.message);
+    return;
+  }
 
   $("#barra-relleno").style.width = `${e.progreso}%`;
   $("#rail-sub").textContent = e.mensaje || "";
