@@ -416,9 +416,10 @@ def burn_subtitles(video: Path, srt: Path, output: Path) -> Path:
     style = ("FontName=Arial,FontSize=22,PrimaryColour=&H00FFFFFF,"
              "OutlineColour=&H90000000,BorderStyle=3,Outline=1,Shadow=0,MarginV=40")
     style_esc = style.replace(",", "\\,")
+    srt_esc = srt.as_posix().replace(":", "\\:")
     run_ffmpeg([
         "-i", str(video),
-        "-vf", f"subtitles={srt.as_posix()}:force_style={style_esc}",
+        "-vf", f"subtitles=filename={srt_esc}:force_style={style_esc}",
         "-c:v", "libx264", "-preset", "ultrafast", "-crf", "23",
         "-c:a", "copy", str(output),
     ])
@@ -428,3 +429,13 @@ def burn_subtitles(video: Path, srt: Path, output: Path) -> Path:
 def check_deps() -> list[str]:
     missing = [b for b in ("ffmpeg", "ffprobe") if not shutil.which(b)]
     return missing
+
+
+def check_subtitles_filter() -> bool:
+    try:
+        result = subprocess.run(
+            ["ffmpeg", "-filters"], stdout=subprocess.PIPE, stderr=subprocess.PIPE
+        )
+        return b"subtitles" in result.stdout + result.stderr
+    except Exception:
+        return False

@@ -47,6 +47,10 @@ function aviso(txt, donde = "#aviso") {
     }
     if (cfg.ollama) { $("#campo-llm").hidden = false; $("#nota-llm").hidden = true; }
     if (!cfg.ffmpeg) aviso("Falta ffmpeg en el servidor: no se podrán montar los vídeos.", "#aviso-inicio");
+    if (!cfg.subtitulos_incrustados) {
+      const opt = $("#subs").querySelector("option[value='incrustados']");
+      if (opt) { opt.disabled = true; opt.textContent += " (no disponible en este servidor)"; }
+    }
   } catch (e) {
     aviso(e.message, "#aviso-inicio");
   }

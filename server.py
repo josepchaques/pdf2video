@@ -82,6 +82,7 @@ def config():
         "voces": P.VOICES if MOTOR == "edge" else [],
         "ollama": ollama,
         "ffmpeg": not P.check_deps(),
+        "subtitulos_incrustados": P.check_subtitles_filter(),
         "max_mb": MAX_MB,
         "max_paginas": MAX_PAGES,
     }
